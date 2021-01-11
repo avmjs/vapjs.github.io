@@ -70,7 +70,7 @@
     <video id="preview" class="videoQRCode"></video>
 
     <div style="width: 75%; margin: 0px auto; display: block; padding-top: 50px;">
-      <h1 id="scannerHeader">EthScanner | Transaction Scanner</h1>
+      <h1 id="scannerHeader">VapScanner | Transaction Scanner</h1>
 
       <button id="scanQR" style="margin: 0px auto; margin-top: 100px; padding: 100px; font-size: 30px; display: block;">Scan QR Code</button>
 
@@ -111,7 +111,7 @@
 
       <p>This project is <b>100% open-source code</b></p>
 
-      <p>Get the source code from the repository - <a href="https://github.com/ethjs/ethjs.github.io" target="_blank">https://github.com/ethjs/ethjs.github.io</a></p>
+      <p>Get the source code from the repository - <a href="https://github.com/vapjs/vapjs.github.io" target="_blank">https://github.com/vapjs/vapjs.github.io</a></p>
 
       <br /><br />
 
@@ -121,18 +121,18 @@
 
     <script type="text/javascript" src="instascan.min.js"></script>
 
-    <script type="text/javascript" src="ethjs.min.js"></script>
+    <script type="text/javascript" src="vapjs.min.js"></script>
 
     <script type="text/javascript" src="qrious.min.js"></script>
 
-    <script type="text/javascript" src="ethereumjs-accounts.js"></script>
+    <script type="text/javascript" src="vaporyjs-accounts.js"></script>
 
     <script type="text/javascript">
     (function(){
       var signedTx = '';
       var scanner = null;
-      const eth = new Eth(new Eth.HttpProvider('https://mainnet.infura.io'));
-      const Buffer = window.Eth.Buffer;
+      const vap = new Vap(new Vap.HttpProvider('https://mainnet.infura.io'));
+      const Buffer = window.Vap.Buffer;
       const content = '0xf86801850ba43b7400833d0900949a78a8e9f560204bd23ea281dd8be06bfdab518c83044164801ca047894b274f953a2eeb7208ff61ac0d651d785ce56ab16b36e2a3136cec8a3bfda03157d3e24e23a7f838bb22649e309426c2474eb3acf38294e53e3744c01f01bd';
 
       function el(query) {
@@ -144,42 +144,42 @@
       }
 
       function toNumber(uint8) {
-        return (new Eth.BN(uint8.toString('hex'), 16)).toString(10);
+        return (new Vap.BN(uint8.toString('hex'), 16)).toString(10);
       }
 
-      function toEtherscanAddressLink(addr) {
+      function toVaporscanAddressLink(addr) {
         return `<a href="https://etherscan.io/address/${addr}" target="_blank">${addr}</a>`
       }
 
-      function toEtherscanTxLink(addr) {
+      function toVaporscanTxLink(addr) {
         return `<a href="https://etherscan.io/tx/${addr}" target="_blank">${addr}</a>`
       }
 
-      function dumpEthereumSignedTransaction() {
+      function dumpVaporySignedTransaction() {
         if (signedTx.length === 0) {
-          el('#result2').innerHTML = `You must scan a signed Ethereum transaction before dumping.`;
+          el('#result2').innerHTML = `You must scan a signed Vapory transaction before dumping.`;
           return;
         }
 
-        if (!confirm("Are you sure you want to broadcast this transaction to the Ethereum network?")) {
+        if (!confirm("Are you sure you want to broadcast this transaction to the Vapory network?")) {
           return;
         }
 
-        eth.sendRawTransaction(signedTx, function(err, result) {
+        vap.sendRawTransaction(signedTx, function(err, result) {
           if (err) {
             el('#result2').innerHTML = `Error: ${err}`;
             return;
           }
 
-          el('#result2').innerHTML = `Tx Hash: ${toEtherscanTxLink(result)} <br /> with transaction data: <span class="dataSpan">${signedTx}</span>`;
+          el('#result2').innerHTML = `Tx Hash: ${toVaporscanTxLink(result)} <br /> with transaction data: <span class="dataSpan">${signedTx}</span>`;
           return;
         });
       }
 
       function validateAccountNonce(tx) {
-        eth.getTransactionCount(toBuffer(tx.from), function(accountNonceError, accountNonceCount) {
+        vap.getTransactionCount(toBuffer(tx.from), function(accountNonceError, accountNonceCount) {
           const nonceValidityEl = el('#nonceValidity');
-          const signedTxNonceCount = new Eth.BN(toNumber(tx.nonce), 10);
+          const signedTxNonceCount = new Vap.BN(toNumber(tx.nonce), 10);
 
           if (!nonceValidityEl) {
             return;
@@ -211,16 +211,16 @@
         });
       }
 
-      function toEther(weiValue) {
-        return Eth.fromWei(weiValue, 'ether').toString(10);
+      function toVapor(weiValue) {
+        return Vap.fromWei(weiValue, 'vapor').toString(10);
       }
 
       function validateAccountBalance(tx) {
-        eth.getBalance(toBuffer(tx.from), function(accountBalanceError, accountBalance) {
+        vap.getBalance(toBuffer(tx.from), function(accountBalanceError, accountBalance) {
           const balanceValidityEl = el('#balanceValidity');
-          const value = new Eth.BN(toNumber(tx.value));
-          const gasPrice = new Eth.BN(toNumber(tx.gasPrice));
-          const gasLimit = new Eth.BN(toNumber(tx.gasLimit));
+          const value = new Vap.BN(toNumber(tx.value));
+          const gasPrice = new Vap.BN(toNumber(tx.gasPrice));
+          const gasLimit = new Vap.BN(toNumber(tx.gasLimit));
           const gasCost = gasPrice.mul(gasLimit).add(value);
           const validGasValue = accountBalance.gte(gasCost);
 
@@ -242,11 +242,11 @@
             <br />
             Your current balance is:
             <br />
-            ${toEther(accountBalance)} ether
+            ${toVapor(accountBalance)} vapor
             <br />
             <br />
             The amount required to send this transaction is:
-            <b>${toEther(gasCost)} ether</b>
+            <b>${toVapor(gasCost)} vapor</b>
             <hr />
             Please either add funds to the account or lower your gas price, limit or value.
             <br />`;
@@ -270,7 +270,7 @@
           <div id="confirmMessage"></div>
 
           Please confirm your transaction details below: <br /> <br />
-          <label>From</label> <span class="dataSpan">${toEtherscanAddressLink(toBuffer(tx.from))}</span> <br />
+          <label>From</label> <span class="dataSpan">${toVaporscanAddressLink(toBuffer(tx.from))}</span> <br />
           <span class="dataSpan warning" id="balanceValidity"></span>
 
           <br /> <br />
@@ -278,12 +278,12 @@
           <label>Nonce</label>  <span class="dataSpan">${toNumber(tx.nonce)}</span> <br />
           <span class="dataSpan warning" id="nonceValidity"></span>
           <label>Gas Limit</label>  <span class="dataSpan">${toNumber(tx.gasLimit)} wei</span> <br />
-          <label>Gas Price</label>  <span class="dataSpan">${Eth.fromWei(toNumber(tx.gasPrice), 'gwei').toString(10)} Gwei</span> <br />
+          <label>Gas Price</label>  <span class="dataSpan">${Vap.fromWei(toNumber(tx.gasPrice), 'gwei').toString(10)} Gwei</span> <br />
 
           <br /> <br />
 
-          <label>To</label>  <span class="dataSpan">${toEtherscanAddressLink(toBuffer(tx.to))}</span> <br />
-          <label>Value</label>  <span class="dataSpan">${Eth.fromWei(toNumber(tx.value), 'ether').toString(10)} ether</span>
+          <label>To</label>  <span class="dataSpan">${toVaporscanAddressLink(toBuffer(tx.to))}</span> <br />
+          <label>Value</label>  <span class="dataSpan">${Vap.fromWei(toNumber(tx.value), 'vapor').toString(10)} vapor</span>
           <label>Data</label>  <span class="dataSpan">${toBuffer(tx.data)}</span>
 
           <br /> <br />
@@ -310,7 +310,7 @@
       }
 
       function loadAddressNonce(address) {
-        eth.getTransactionCount(address, function(nonceError, nonceCount){
+        vap.getTransactionCount(address, function(nonceError, nonceCount){
           if (nonceError) {
             el('#addressNonce').innerHTML = `There was an error while loading your account nonce: ${nonceError} ${nonceError.value}`;
             return;
@@ -321,13 +321,13 @@
       }
 
       function loadAddressBalance(address) {
-        eth.getBalance(address, function(balanceError, balanceAmount){
+        vap.getBalance(address, function(balanceError, balanceAmount){
           if (balanceError) {
             el('#addressBalance').innerHTML = `There was an error while loading your account balance ${balanceError} ${balanceError.value}`;
             return;
           }
 
-          el('#addressBalance').innerHTML = `${Eth.fromWei(balanceAmount, 'ether').toString(10)} ether`;
+          el('#addressBalance').innerHTML = `${Vap.fromWei(balanceAmount, 'vapor').toString(10)} vapor`;
         });
       }
 
@@ -401,11 +401,11 @@
 
       function onSuccessfulQRCodeScan(content) {
         try {
-          if (Eth.isAddress(content)) {
+          if (Vap.isAddress(content)) {
             showAddressData(content);
           } else {
             signedTx = content;
-            const tx = new EthTx(content);
+            const tx = new VapTx(content);
 
             showSignedTransactionData(tx);
           }
@@ -452,7 +452,7 @@
 
         el('#scanQR').addEventListener('click', openScanQR);
         el('#scanQR2').addEventListener('click', openScanQR);
-        el('#dump').addEventListener('click', dumpEthereumSignedTransaction);
+        el('#dump').addEventListener('click', dumpVaporySignedTransaction);
       }
 
       window.addEventListener('load', load);

@@ -4,11 +4,11 @@
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define("ethAccount", [], factory);
+		define("vapAccount", [], factory);
 	else if(typeof exports === 'object')
-		exports["ethAccount"] = factory();
+		exports["vapAccount"] = factory();
 	else
-		root["ethAccount"] = factory();
+		root["vapAccount"] = factory();
 })(this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -64,7 +64,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 38);
+/******/ 	return __webpack_require__(__webpack_require__.s = 41);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -76,16 +76,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 var elliptic = exports;
 
-elliptic.version = __webpack_require__(34).version;
-elliptic.utils = __webpack_require__(26);
-elliptic.rand = __webpack_require__(12);
-elliptic.hmacDRBG = __webpack_require__(24);
+elliptic.version = __webpack_require__(33).version;
+elliptic.utils = __webpack_require__(24);
+elliptic.rand = __webpack_require__(10);
+elliptic.hmacDRBG = __webpack_require__(22);
 elliptic.curve = __webpack_require__(4);
-elliptic.curves = __webpack_require__(17);
+elliptic.curves = __webpack_require__(15);
 
 // Protocols
-elliptic.ec = __webpack_require__(18);
-elliptic.eddsa = __webpack_require__(21);
+elliptic.ec = __webpack_require__(16);
+elliptic.eddsa = __webpack_require__(19);
 
 
 /***/ },
@@ -3520,7 +3520,7 @@ elliptic.eddsa = __webpack_require__(21);
   };
 })(typeof module === 'undefined' || module, this);
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(36)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(39)(module)))
 
 /***/ },
 /* 2 */
@@ -3528,11 +3528,11 @@ elliptic.eddsa = __webpack_require__(21);
 
 var hash = exports;
 
-hash.utils = __webpack_require__(31);
-hash.common = __webpack_require__(27);
-hash.sha = __webpack_require__(30);
-hash.ripemd = __webpack_require__(29);
-hash.hmac = __webpack_require__(28);
+hash.utils = __webpack_require__(29);
+hash.common = __webpack_require__(25);
+hash.sha = __webpack_require__(28);
+hash.ripemd = __webpack_require__(27);
+hash.hmac = __webpack_require__(26);
 
 // Proxy hash functions to the main object
 hash.sha1 = hash.sha.sha1;
@@ -3558,9 +3558,9 @@ hash.ripemd160 = hash.ripemd.ripemd160;
 
 'use strict'
 
-var base64 = __webpack_require__(11)
-var ieee754 = __webpack_require__(32)
-var isArray = __webpack_require__(33)
+var base64 = __webpack_require__(9)
+var ieee754 = __webpack_require__(30)
+var isArray = __webpack_require__(32)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -5338,7 +5338,7 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3).Buffer, __webpack_require__(6)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3).Buffer, __webpack_require__(38)))
 
 /***/ },
 /* 4 */
@@ -5349,10 +5349,10 @@ function isnan (val) {
 
 var curve = exports;
 
-curve.base = __webpack_require__(13);
-curve.short = __webpack_require__(16);
-curve.mont = __webpack_require__(15);
-curve.edwards = __webpack_require__(14);
+curve.base = __webpack_require__(11);
+curve.short = __webpack_require__(14);
+curve.mont = __webpack_require__(13);
+curve.edwards = __webpack_require__(12);
 
 
 /***/ },
@@ -5386,317 +5386,139 @@ if (typeof Object.create === 'function') {
 
 /***/ },
 /* 6 */
-/***/ function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() { return this; })();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ },
-/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process, global) {/**
- * [js-sha3]{@link https://github.com/emn178/js-sha3}
+"use strict";
+/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
+
+/* eslint-disable */
+
+var hash = __webpack_require__(2);
+
+// See: https://github.com/emn178/js-sha3
+var padding = [1, 256, 65536, 16777216];
+var HEX_CHARS = '0123456789abcdef'.split('');
+var SHIFT = [0, 8, 16, 24];
+var RC = [1, 0, 32898, 0, 32906, 2147483648, 2147516416, 2147483648, 32907, 0, 2147483649, 0, 2147516545, 2147483648, 32777, 2147483648, 138, 0, 136, 0, 2147516425, 0, 2147483658, 0, 2147516555, 0, 139, 2147483648, 32905, 2147483648, 32771, 2147483648, 32770, 2147483648, 128, 2147483648, 32778, 0, 2147483658, 2147483648, 2147516545, 2147483648, 32896, 2147483648, 2147483649, 0, 2147516424, 2147483648];
+
+var blocks = [],
+    s = [];
+
+/**
+ * A helper funciton that completes the keccak hashing process on a string message.
  *
- * @version 0.5.5
- * @author Chen, Yi-Cyuan [emn178@gmail.com]
- * @copyright Chen, Yi-Cyuan 2015-2016
- * @license MIT
+ * @method keccak
+ * @param {String} message the input data to be keccak hashed
+ * @returns {String} output the output keccak string
  */
-(function (root) {
-  'use strict';
 
-  var NODE_JS = typeof process == 'object' && process.versions && process.versions.node;
-  if (NODE_JS) {
-    root = global;
+function keccak(message) {
+
+  var block,
+      code,
+      end = false,
+      index = 0,
+      start = 0,
+      length = message.length,
+      n,
+      i,
+      h,
+      l,
+      c0,
+      c1,
+      c2,
+      c3,
+      c4,
+      c5,
+      c6,
+      c7,
+      c8,
+      c9,
+      b0,
+      b1,
+      b2,
+      b3,
+      b4,
+      b5,
+      b6,
+      b7,
+      b8,
+      b9,
+      b10,
+      b11,
+      b12,
+      b13,
+      b14,
+      b15,
+      b16,
+      b17,
+      b18,
+      b19,
+      b20,
+      b21,
+      b22,
+      b23,
+      b24,
+      b25,
+      b26,
+      b27,
+      b28,
+      b29,
+      b30,
+      b31,
+      b32,
+      b33,
+      b34,
+      b35,
+      b36,
+      b37,
+      b38,
+      b39,
+      b40,
+      b41,
+      b42,
+      b43,
+      b44,
+      b45,
+      b46,
+      b47,
+      b48,
+      b49;
+  var blockCount = 34;
+  var byteCount = blockCount * 4;
+
+  for (i = 0; i < 50; ++i) {
+    s[i] = 0;
   }
-  var COMMON_JS = !root.JS_SHA3_TEST && typeof module == 'object' && module.exports;
-  var HEX_CHARS = '0123456789abcdef'.split('');
-  var SHAKE_PADDING = [31, 7936, 2031616, 520093696];
-  var KECCAK_PADDING = [1, 256, 65536, 16777216];
-  var PADDING = [6, 1536, 393216, 100663296];
-  var SHIFT = [0, 8, 16, 24];
-  var RC = [1, 0, 32898, 0, 32906, 2147483648, 2147516416, 2147483648, 32907, 0, 2147483649,
-            0, 2147516545, 2147483648, 32777, 2147483648, 138, 0, 136, 0, 2147516425, 0, 
-            2147483658, 0, 2147516555, 0, 139, 2147483648, 32905, 2147483648, 32771, 
-            2147483648, 32770, 2147483648, 128, 2147483648, 32778, 0, 2147483658, 2147483648,
-            2147516545, 2147483648, 32896, 2147483648, 2147483649, 0, 2147516424, 2147483648];
-  var BITS = [224, 256, 384, 512];
-  var SHAKE_BITS = [128, 256];
-  var OUTPUT_TYPES = ['hex', 'buffer', 'arrayBuffer', 'array'];
 
-  var createOutputMethod = function (bits, padding, outputType) {
-    return function (message) {
-      return new Keccak(bits, padding, bits).update(message)[outputType]();
+  block = 0;
+  do {
+    blocks[0] = block;
+    for (i = 1; i < blockCount + 1; ++i) {
+      blocks[i] = 0;
     }
-  };
 
-  var createShakeOutputMethod = function (bits, padding, outputType) {
-    return function (message, outputBits) {
-      return new Keccak(bits, padding, outputBits).update(message)[outputType]();
+    for (i = start; index < length && i < byteCount; ++index) {
+      blocks[i >> 2] |= message[index] << SHIFT[i++ & 3];
     }
-  };
 
-  var createMethod = function (bits, padding) {
-    var method = createOutputMethod(bits, padding, 'hex');
-    method.create = function () {
-      return new Keccak(bits, padding, bits);
-    };
-    method.update = function (message) {
-      return method.create().update(message);
-    };
-    for (var i = 0;i < OUTPUT_TYPES.length;++i) {
-      var type = OUTPUT_TYPES[i];
-      method[type] = createOutputMethod(bits, padding, type);
+    start = i - byteCount;
+    if (index == length) {
+      blocks[i >> 2] |= padding[i & 3];
+      ++index;
     }
-    return method;
-  };
 
-  var createShakeMethod = function (bits, padding) {
-    var method = createShakeOutputMethod(bits, padding, 'hex');
-    method.create = function (outputBits) {
-      return new Keccak(bits, padding, outputBits);
-    };
-    method.update = function (message, outputBits) {
-      return method.create(outputBits).update(message);
-    };
-    for (var i = 0;i < OUTPUT_TYPES.length;++i) {
-      var type = OUTPUT_TYPES[i];
-      method[type] = createShakeOutputMethod(bits, padding, type);
+    block = blocks[blockCount];
+    if (index > length && i < byteCount) {
+      blocks[blockCount - 1] |= 0x80000000;
+      end = true;
     }
-    return method;
-  };
 
-  var algorithms = [
-    {name: 'keccak', padding: KECCAK_PADDING, bits: BITS, createMethod: createMethod},
-    {name: 'sha3', padding: PADDING, bits: BITS, createMethod: createMethod},
-    {name: 'shake', padding: SHAKE_PADDING, bits: SHAKE_BITS, createMethod: createShakeMethod}
-  ];
-
-  var methods = {};
-
-  for (var i = 0;i < algorithms.length;++i) {
-    var algorithm = algorithms[i];
-    var bits  = algorithm.bits;
-    for (var j = 0;j < bits.length;++j) {
-      methods[algorithm.name +'_' + bits[j]] = algorithm.createMethod(bits[j], algorithm.padding);
-    }
-  }
-
-  function Keccak(bits, padding, outputBits) {
-    this.blocks = [];
-    this.s = [];
-    this.padding = padding;
-    this.outputBits = outputBits;
-    this.reset = true;
-    this.block = 0;
-    this.start = 0;
-    this.blockCount = (1600 - (bits << 1)) >> 5;
-    this.byteCount = this.blockCount << 2;
-    this.outputBlocks = outputBits >> 5;
-    this.extraBytes = (outputBits & 31) >> 3;
-
-    for (var i = 0;i < 50;++i) {
-      this.s[i] = 0;
-    }
-  };
-
-  Keccak.prototype.update = function (message) {
-    var notString = typeof message != 'string';
-    if (notString && message.constructor == root.ArrayBuffer) {
-      message = new Uint8Array(message);
-    }
-    var length = message.length, blocks = this.blocks, byteCount = this.byteCount, 
-        blockCount = this.blockCount, index = 0, s = this.s, i, code;
-    
-    while (index < length) {
-      if (this.reset) {
-        this.reset = false;
-        blocks[0] = this.block;
-        for (i = 1;i < blockCount + 1;++i) {
-          blocks[i] = 0;
-        }
-      }
-      if (notString) {
-        for (i = this.start;index < length && i < byteCount;++index) {
-          blocks[i >> 2] |= message[index] << SHIFT[i++ & 3];
-        }
-      } else {
-        for (i = this.start;index < length && i < byteCount;++index) {
-          code = message.charCodeAt(index);
-          if (code < 0x80) {
-            blocks[i >> 2] |= code << SHIFT[i++ & 3];
-          } else if (code < 0x800) {
-            blocks[i >> 2] |= (0xc0 | (code >> 6)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
-          } else if (code < 0xd800 || code >= 0xe000) {
-            blocks[i >> 2] |= (0xe0 | (code >> 12)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
-          } else {
-            code = 0x10000 + (((code & 0x3ff) << 10) | (message.charCodeAt(++index) & 0x3ff));
-            blocks[i >> 2] |= (0xf0 | (code >> 18)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | ((code >> 12) & 0x3f)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
-          }
-        }
-      }
-      this.lastByteIndex = i;
-      if (i >= byteCount) {
-        this.start = i - byteCount;
-        this.block = blocks[blockCount];
-        for (i = 0;i < blockCount;++i) {
-          s[i] ^= blocks[i];
-        }
-        f(s);
-        this.reset = true;
-      } else {
-        this.start = i;
-      }
-    }
-    return this;
-  };
-
-  Keccak.prototype.finalize = function () {
-    var blocks = this.blocks, i = this.lastByteIndex, blockCount = this.blockCount, s = this.s;
-    blocks[i >> 2] |= this.padding[i & 3];
-    if (this.lastByteIndex == this.byteCount) {
-      blocks[0] = blocks[blockCount];
-      for (i = 1;i < blockCount + 1;++i) {
-        blocks[i] = 0;
-      }
-    }
-    blocks[blockCount - 1] |= 0x80000000;
-    for (i = 0;i < blockCount;++i) {
+    for (i = 0; i < blockCount; ++i) {
       s[i] ^= blocks[i];
     }
-    f(s);
-  };
 
-  Keccak.prototype.toString = Keccak.prototype.hex = function () {
-    this.finalize();
-
-    var blockCount = this.blockCount, s = this.s, outputBlocks = this.outputBlocks, 
-        extraBytes = this.extraBytes, i = 0, j = 0;
-    var hex = '', block;
-    while (j < outputBlocks) {
-      for (i = 0;i < blockCount && j < outputBlocks;++i, ++j) {
-        block = s[i];
-        hex += HEX_CHARS[(block >> 4) & 0x0F] + HEX_CHARS[block & 0x0F] +
-               HEX_CHARS[(block >> 12) & 0x0F] + HEX_CHARS[(block >> 8) & 0x0F] +
-               HEX_CHARS[(block >> 20) & 0x0F] + HEX_CHARS[(block >> 16) & 0x0F] +
-               HEX_CHARS[(block >> 28) & 0x0F] + HEX_CHARS[(block >> 24) & 0x0F];
-      }
-      if (j % blockCount == 0) {
-        f(s);
-        i = 0;
-      }
-    }
-    if (extraBytes) {
-      block = s[i];
-      if (extraBytes > 0) {
-        hex += HEX_CHARS[(block >> 4) & 0x0F] + HEX_CHARS[block & 0x0F];
-      }
-      if (extraBytes > 1) {
-        hex += HEX_CHARS[(block >> 12) & 0x0F] + HEX_CHARS[(block >> 8) & 0x0F];
-      }
-      if (extraBytes > 2) {
-        hex += HEX_CHARS[(block >> 20) & 0x0F] + HEX_CHARS[(block >> 16) & 0x0F];
-      }
-    }
-    return hex;
-  };
-
-  Keccak.prototype.arrayBuffer = function () {
-    this.finalize();
-
-    var blockCount = this.blockCount, s = this.s, outputBlocks = this.outputBlocks, 
-        extraBytes = this.extraBytes, i = 0, j = 0;
-    var bytes = this.outputBits >> 3;
-    var buffer;
-    if (extraBytes) {
-      buffer = new ArrayBuffer((outputBlocks + 1) << 2);
-    } else {
-      buffer = new ArrayBuffer(bytes);
-    }
-    var array = new Uint32Array(buffer);
-    while (j < outputBlocks) {
-      for (i = 0;i < blockCount && j < outputBlocks;++i, ++j) {
-        array[j] = s[i];
-      }
-      if (j % blockCount == 0) {
-        f(s);
-      }
-    }
-    if (extraBytes) {
-      array[i] = s[i];
-      buffer = buffer.slice(0, bytes);
-    }
-    return buffer;
-  };
-
-  Keccak.prototype.buffer = Keccak.prototype.arrayBuffer;
-
-  Keccak.prototype.digest = Keccak.prototype.array = function () {
-    this.finalize();
-
-    var blockCount = this.blockCount, s = this.s, outputBlocks = this.outputBlocks, 
-        extraBytes = this.extraBytes, i = 0, j = 0;
-    var array = [], offset, block;
-    while (j < outputBlocks) {
-      for (i = 0;i < blockCount && j < outputBlocks;++i, ++j) {
-        offset = j << 2;
-        block = s[i];
-        array[offset] = block & 0xFF;
-        array[offset + 1] = (block >> 8) & 0xFF;
-        array[offset + 2] = (block >> 16) & 0xFF;
-        array[offset + 3] = (block >> 24) & 0xFF;
-      }
-      if (j % blockCount == 0) {
-        f(s);
-      }
-    }
-    if (extraBytes) {
-      offset = j << 2;
-      block = s[i];
-      if (extraBytes > 0) {
-        array[offset] = block & 0xFF;
-      }
-      if (extraBytes > 1) {
-        array[offset + 1] = (block >> 8) & 0xFF;
-      }
-      if (extraBytes > 2) {
-        array[offset + 2] = (block >> 16) & 0xFF;
-      }
-    }
-    return array;
-  };
-
-  var f = function (s) {
-    var h, l, n, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, 
-        b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, 
-        b18, b19, b20, b21, b22, b23, b24, b25, b26, b27, b28, b29, b30, b31, b32, b33, 
-        b34, b35, b36, b37, b38, b39, b40, b41, b42, b43, b44, b45, b46, b47, b48, b49;
-    for (n = 0;n < 48;n += 2) {
+    for (n = 0; n < 48; n += 2) {
       c0 = s[0] ^ s[10] ^ s[20] ^ s[30] ^ s[40];
       c1 = s[1] ^ s[11] ^ s[21] ^ s[31] ^ s[41];
       c2 = s[2] ^ s[12] ^ s[22] ^ s[32] ^ s[42];
@@ -5708,383 +5530,175 @@ module.exports = g;
       c8 = s[8] ^ s[18] ^ s[28] ^ s[38] ^ s[48];
       c9 = s[9] ^ s[19] ^ s[29] ^ s[39] ^ s[49];
 
-      h = c8 ^ ((c2 << 1) | (c3 >>> 31));
-      l = c9 ^ ((c3 << 1) | (c2 >>> 31));
-      s[0] ^= h;
-      s[1] ^= l;
-      s[10] ^= h;
-      s[11] ^= l;
-      s[20] ^= h;
-      s[21] ^= l;
-      s[30] ^= h;
-      s[31] ^= l;
-      s[40] ^= h;
-      s[41] ^= l;
-      h = c0 ^ ((c4 << 1) | (c5 >>> 31));
-      l = c1 ^ ((c5 << 1) | (c4 >>> 31));
-      s[2] ^= h;
-      s[3] ^= l;
-      s[12] ^= h;
-      s[13] ^= l;
-      s[22] ^= h;
-      s[23] ^= l;
-      s[32] ^= h;
-      s[33] ^= l;
-      s[42] ^= h;
-      s[43] ^= l;
-      h = c2 ^ ((c6 << 1) | (c7 >>> 31));
-      l = c3 ^ ((c7 << 1) | (c6 >>> 31));
-      s[4] ^= h;
-      s[5] ^= l;
-      s[14] ^= h;
-      s[15] ^= l;
-      s[24] ^= h;
-      s[25] ^= l;
-      s[34] ^= h;
-      s[35] ^= l;
-      s[44] ^= h;
-      s[45] ^= l;
-      h = c4 ^ ((c8 << 1) | (c9 >>> 31));
-      l = c5 ^ ((c9 << 1) | (c8 >>> 31));
-      s[6] ^= h;
-      s[7] ^= l;
-      s[16] ^= h;
-      s[17] ^= l;
-      s[26] ^= h;
-      s[27] ^= l;
-      s[36] ^= h;
-      s[37] ^= l;
-      s[46] ^= h;
-      s[47] ^= l;
-      h = c6 ^ ((c0 << 1) | (c1 >>> 31));
-      l = c7 ^ ((c1 << 1) | (c0 >>> 31));
-      s[8] ^= h;
-      s[9] ^= l;
-      s[18] ^= h;
-      s[19] ^= l;
-      s[28] ^= h;
-      s[29] ^= l;
-      s[38] ^= h;
-      s[39] ^= l;
-      s[48] ^= h;
-      s[49] ^= l;
+      h = c8 ^ (c2 << 1 | c3 >>> 31);
+      l = c9 ^ (c3 << 1 | c2 >>> 31);
+      s[0] ^= h;s[1] ^= l;s[10] ^= h;s[11] ^= l;
+      s[20] ^= h;s[21] ^= l;s[30] ^= h;s[31] ^= l;
+      s[40] ^= h;s[41] ^= l;
+      h = c0 ^ (c4 << 1 | c5 >>> 31);
+      l = c1 ^ (c5 << 1 | c4 >>> 31);
+      s[2] ^= h;s[3] ^= l;s[12] ^= h;s[13] ^= l;
+      s[22] ^= h;s[23] ^= l;s[32] ^= h;s[33] ^= l;
+      s[42] ^= h;s[43] ^= l;
+      h = c2 ^ (c6 << 1 | c7 >>> 31);
+      l = c3 ^ (c7 << 1 | c6 >>> 31);
+      s[4] ^= h;s[5] ^= l;s[14] ^= h;s[15] ^= l;
+      s[24] ^= h;s[25] ^= l;s[34] ^= h;s[35] ^= l;
+      s[44] ^= h;s[45] ^= l;
+      h = c4 ^ (c8 << 1 | c9 >>> 31);
+      l = c5 ^ (c9 << 1 | c8 >>> 31);
+      s[6] ^= h;s[7] ^= l;s[16] ^= h;s[17] ^= l;
+      s[26] ^= h;s[27] ^= l;s[36] ^= h;s[37] ^= l;
+      s[46] ^= h;s[47] ^= l;
+      h = c6 ^ (c0 << 1 | c1 >>> 31);
+      l = c7 ^ (c1 << 1 | c0 >>> 31);
+      s[8] ^= h;s[9] ^= l;s[18] ^= h;s[19] ^= l;
+      s[28] ^= h;s[29] ^= l;s[38] ^= h;s[39] ^= l;
+      s[48] ^= h;s[49] ^= l;
 
-      b0 = s[0];
-      b1 = s[1];
-      b32 = (s[11] << 4) | (s[10] >>> 28);
-      b33 = (s[10] << 4) | (s[11] >>> 28);
-      b14 = (s[20] << 3) | (s[21] >>> 29);
-      b15 = (s[21] << 3) | (s[20] >>> 29);
-      b46 = (s[31] << 9) | (s[30] >>> 23);
-      b47 = (s[30] << 9) | (s[31] >>> 23);
-      b28 = (s[40] << 18) | (s[41] >>> 14);
-      b29 = (s[41] << 18) | (s[40] >>> 14);
-      b20 = (s[2] << 1) | (s[3] >>> 31);
-      b21 = (s[3] << 1) | (s[2] >>> 31);
-      b2 = (s[13] << 12) | (s[12] >>> 20);
-      b3 = (s[12] << 12) | (s[13] >>> 20);
-      b34 = (s[22] << 10) | (s[23] >>> 22);
-      b35 = (s[23] << 10) | (s[22] >>> 22);
-      b16 = (s[33] << 13) | (s[32] >>> 19);
-      b17 = (s[32] << 13) | (s[33] >>> 19);
-      b48 = (s[42] << 2) | (s[43] >>> 30);
-      b49 = (s[43] << 2) | (s[42] >>> 30);
-      b40 = (s[5] << 30) | (s[4] >>> 2);
-      b41 = (s[4] << 30) | (s[5] >>> 2);
-      b22 = (s[14] << 6) | (s[15] >>> 26);
-      b23 = (s[15] << 6) | (s[14] >>> 26);
-      b4 = (s[25] << 11) | (s[24] >>> 21);
-      b5 = (s[24] << 11) | (s[25] >>> 21);
-      b36 = (s[34] << 15) | (s[35] >>> 17);
-      b37 = (s[35] << 15) | (s[34] >>> 17);
-      b18 = (s[45] << 29) | (s[44] >>> 3);
-      b19 = (s[44] << 29) | (s[45] >>> 3);
-      b10 = (s[6] << 28) | (s[7] >>> 4);
-      b11 = (s[7] << 28) | (s[6] >>> 4);
-      b42 = (s[17] << 23) | (s[16] >>> 9);
-      b43 = (s[16] << 23) | (s[17] >>> 9);
-      b24 = (s[26] << 25) | (s[27] >>> 7);
-      b25 = (s[27] << 25) | (s[26] >>> 7);
-      b6 = (s[36] << 21) | (s[37] >>> 11);
-      b7 = (s[37] << 21) | (s[36] >>> 11);
-      b38 = (s[47] << 24) | (s[46] >>> 8);
-      b39 = (s[46] << 24) | (s[47] >>> 8);
-      b30 = (s[8] << 27) | (s[9] >>> 5);
-      b31 = (s[9] << 27) | (s[8] >>> 5);
-      b12 = (s[18] << 20) | (s[19] >>> 12);
-      b13 = (s[19] << 20) | (s[18] >>> 12);
-      b44 = (s[29] << 7) | (s[28] >>> 25);
-      b45 = (s[28] << 7) | (s[29] >>> 25);
-      b26 = (s[38] << 8) | (s[39] >>> 24);
-      b27 = (s[39] << 8) | (s[38] >>> 24);
-      b8 = (s[48] << 14) | (s[49] >>> 18);
-      b9 = (s[49] << 14) | (s[48] >>> 18);
+      b0 = s[0];b1 = s[1];
+      b32 = s[11] << 4 | s[10] >>> 28;
+      b33 = s[10] << 4 | s[11] >>> 28;
+      b14 = s[20] << 3 | s[21] >>> 29;
+      b15 = s[21] << 3 | s[20] >>> 29;
+      b46 = s[31] << 9 | s[30] >>> 23;
+      b47 = s[30] << 9 | s[31] >>> 23;
+      b28 = s[40] << 18 | s[41] >>> 14;
+      b29 = s[41] << 18 | s[40] >>> 14;
+      b20 = s[2] << 1 | s[3] >>> 31;
+      b21 = s[3] << 1 | s[2] >>> 31;
+      b2 = s[13] << 12 | s[12] >>> 20;
+      b3 = s[12] << 12 | s[13] >>> 20;
+      b34 = s[22] << 10 | s[23] >>> 22;
+      b35 = s[23] << 10 | s[22] >>> 22;
+      b16 = s[33] << 13 | s[32] >>> 19;
+      b17 = s[32] << 13 | s[33] >>> 19;
+      b48 = s[42] << 2 | s[43] >>> 30;
+      b49 = s[43] << 2 | s[42] >>> 30;
+      b40 = s[5] << 30 | s[4] >>> 2;
+      b41 = s[4] << 30 | s[5] >>> 2;
+      b22 = s[14] << 6 | s[15] >>> 26;
+      b23 = s[15] << 6 | s[14] >>> 26;
+      b4 = s[25] << 11 | s[24] >>> 21;
+      b5 = s[24] << 11 | s[25] >>> 21;
+      b36 = s[34] << 15 | s[35] >>> 17;
+      b37 = s[35] << 15 | s[34] >>> 17;
+      b18 = s[45] << 29 | s[44] >>> 3;
+      b19 = s[44] << 29 | s[45] >>> 3;
+      b10 = s[6] << 28 | s[7] >>> 4;
+      b11 = s[7] << 28 | s[6] >>> 4;
+      b42 = s[17] << 23 | s[16] >>> 9;
+      b43 = s[16] << 23 | s[17] >>> 9;
+      b24 = s[26] << 25 | s[27] >>> 7;
+      b25 = s[27] << 25 | s[26] >>> 7;
+      b6 = s[36] << 21 | s[37] >>> 11;
+      b7 = s[37] << 21 | s[36] >>> 11;
+      b38 = s[47] << 24 | s[46] >>> 8;
+      b39 = s[46] << 24 | s[47] >>> 8;
+      b30 = s[8] << 27 | s[9] >>> 5;
+      b31 = s[9] << 27 | s[8] >>> 5;
+      b12 = s[18] << 20 | s[19] >>> 12;
+      b13 = s[19] << 20 | s[18] >>> 12;
+      b44 = s[29] << 7 | s[28] >>> 25;
+      b45 = s[28] << 7 | s[29] >>> 25;
+      b26 = s[38] << 8 | s[39] >>> 24;
+      b27 = s[39] << 8 | s[38] >>> 24;
+      b8 = s[48] << 14 | s[49] >>> 18;
+      b9 = s[49] << 14 | s[48] >>> 18;
 
-      s[0] = b0 ^ (~b2 & b4);
-      s[1] = b1 ^ (~b3 & b5);
-      s[10] = b10 ^ (~b12 & b14);
-      s[11] = b11 ^ (~b13 & b15);
-      s[20] = b20 ^ (~b22 & b24);
-      s[21] = b21 ^ (~b23 & b25);
-      s[30] = b30 ^ (~b32 & b34);
-      s[31] = b31 ^ (~b33 & b35);
-      s[40] = b40 ^ (~b42 & b44);
-      s[41] = b41 ^ (~b43 & b45);
-      s[2] = b2 ^ (~b4 & b6);
-      s[3] = b3 ^ (~b5 & b7);
-      s[12] = b12 ^ (~b14 & b16);
-      s[13] = b13 ^ (~b15 & b17);
-      s[22] = b22 ^ (~b24 & b26);
-      s[23] = b23 ^ (~b25 & b27);
-      s[32] = b32 ^ (~b34 & b36);
-      s[33] = b33 ^ (~b35 & b37);
-      s[42] = b42 ^ (~b44 & b46);
-      s[43] = b43 ^ (~b45 & b47);
-      s[4] = b4 ^ (~b6 & b8);
-      s[5] = b5 ^ (~b7 & b9);
-      s[14] = b14 ^ (~b16 & b18);
-      s[15] = b15 ^ (~b17 & b19);
-      s[24] = b24 ^ (~b26 & b28);
-      s[25] = b25 ^ (~b27 & b29);
-      s[34] = b34 ^ (~b36 & b38);
-      s[35] = b35 ^ (~b37 & b39);
-      s[44] = b44 ^ (~b46 & b48);
-      s[45] = b45 ^ (~b47 & b49);
-      s[6] = b6 ^ (~b8 & b0);
-      s[7] = b7 ^ (~b9 & b1);
-      s[16] = b16 ^ (~b18 & b10);
-      s[17] = b17 ^ (~b19 & b11);
-      s[26] = b26 ^ (~b28 & b20);
-      s[27] = b27 ^ (~b29 & b21);
-      s[36] = b36 ^ (~b38 & b30);
-      s[37] = b37 ^ (~b39 & b31);
-      s[46] = b46 ^ (~b48 & b40);
-      s[47] = b47 ^ (~b49 & b41);
-      s[8] = b8 ^ (~b0 & b2);
-      s[9] = b9 ^ (~b1 & b3);
-      s[18] = b18 ^ (~b10 & b12);
-      s[19] = b19 ^ (~b11 & b13);
-      s[28] = b28 ^ (~b20 & b22);
-      s[29] = b29 ^ (~b21 & b23);
-      s[38] = b38 ^ (~b30 & b32);
-      s[39] = b39 ^ (~b31 & b33);
-      s[48] = b48 ^ (~b40 & b42);
-      s[49] = b49 ^ (~b41 & b43);
+      s[0] = b0 ^ ~b2 & b4;s[1] = b1 ^ ~b3 & b5;
+      s[10] = b10 ^ ~b12 & b14;s[11] = b11 ^ ~b13 & b15;
+      s[20] = b20 ^ ~b22 & b24;s[21] = b21 ^ ~b23 & b25;
+      s[30] = b30 ^ ~b32 & b34;s[31] = b31 ^ ~b33 & b35;
+      s[40] = b40 ^ ~b42 & b44;s[41] = b41 ^ ~b43 & b45;
+      s[2] = b2 ^ ~b4 & b6;s[3] = b3 ^ ~b5 & b7;
+      s[12] = b12 ^ ~b14 & b16;s[13] = b13 ^ ~b15 & b17;
+      s[22] = b22 ^ ~b24 & b26;s[23] = b23 ^ ~b25 & b27;
+      s[32] = b32 ^ ~b34 & b36;s[33] = b33 ^ ~b35 & b37;
+      s[42] = b42 ^ ~b44 & b46;s[43] = b43 ^ ~b45 & b47;
+      s[4] = b4 ^ ~b6 & b8;s[5] = b5 ^ ~b7 & b9;
+      s[14] = b14 ^ ~b16 & b18;s[15] = b15 ^ ~b17 & b19;
+      s[24] = b24 ^ ~b26 & b28;s[25] = b25 ^ ~b27 & b29;
+      s[34] = b34 ^ ~b36 & b38;s[35] = b35 ^ ~b37 & b39;
+      s[44] = b44 ^ ~b46 & b48;s[45] = b45 ^ ~b47 & b49;
+      s[6] = b6 ^ ~b8 & b0;s[7] = b7 ^ ~b9 & b1;
+      s[16] = b16 ^ ~b18 & b10;s[17] = b17 ^ ~b19 & b11;
+      s[26] = b26 ^ ~b28 & b20;s[27] = b27 ^ ~b29 & b21;
+      s[36] = b36 ^ ~b38 & b30;s[37] = b37 ^ ~b39 & b31;
+      s[46] = b46 ^ ~b48 & b40;s[47] = b47 ^ ~b49 & b41;
+      s[8] = b8 ^ ~b0 & b2;s[9] = b9 ^ ~b1 & b3;
+      s[18] = b18 ^ ~b10 & b12;s[19] = b19 ^ ~b11 & b13;
+      s[28] = b28 ^ ~b20 & b22;s[29] = b29 ^ ~b21 & b23;
+      s[38] = b38 ^ ~b30 & b32;s[39] = b39 ^ ~b31 & b33;
+      s[48] = b48 ^ ~b40 & b42;s[49] = b49 ^ ~b41 & b43;
 
-      s[0] ^= RC[n];
-      s[1] ^= RC[n + 1];
+      s[0] ^= RC[n];s[1] ^= RC[n + 1];
     }
+  } while (!end);
+
+  var hex = ''; // eslint-disable-line
+  for (i = 0, n = 8; i < n; ++i) {
+    h = s[i];
+    hex += HEX_CHARS[h >> 4 & 0x0F] + HEX_CHARS[h & 0x0F] + HEX_CHARS[h >> 12 & 0x0F] + HEX_CHARS[h >> 8 & 0x0F] + HEX_CHARS[h >> 20 & 0x0F] + HEX_CHARS[h >> 16 & 0x0F] + HEX_CHARS[h >> 28 & 0x0F] + HEX_CHARS[h >> 24 & 0x0F];
   }
 
-  if (COMMON_JS) {
-    module.exports = methods;
-  } else if (root) {
-    for (var key in methods) {
-      root[key] = methods[key];
-    }
+  return hex;
+}
+
+/* function sha256(dataInput) {
+  var data = dataInput; // eslint-disable-line
+
+  if (typeof(data) === 'string') {
+    data = new Buffer(data, 'utf8');
+  } else if (!Buffer.isBuffer(data)) {
+    throw new Error('must be a sting');
   }
-}(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8), __webpack_require__(6)))
+  return (new Buffer(hash.sha256().update(data).digest('hex'), 'hex'));
+} */
+
+/**
+ * Returns the sha3 value of a data input, optionally returns Buffer object.
+ *
+ * @method sha3
+ * @param {String|Object} dataInput the input data to be hashed (either Buffer or String)
+ * @param {Boolean} toBuffer return the output as a buffer object
+ * @returns {String|Buffer} output the output string or buffer
+ * @throws error if the input is a buffer
+ */
+
+function sha3(dataInput, toBuffer) {
+  var data = dataInput; // eslint-disable-line
+
+  if (typeof data === 'string') {
+    data = new Buffer(data, 'utf8');
+  } else if (!Buffer.isBuffer(data)) {
+    throw new Error('[vapjs-sha3] data input must be type \'String\' or Buffer \'Object\' instance got ' + typeof dataInput + ', if your trying to hash a BigNumber or BN object, convert it to a string by using \'value.toString(10)\'.');
+  }
+
+  if (toBuffer === true) {
+    return new Buffer(keccak(data), 'hex');
+  } else {
+    return '0x' + new Buffer(keccak(data), 'hex').toString('hex');
+  }
+}
+
+module.exports = sha3;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3).Buffer))
 
 /***/ },
-/* 8 */
-/***/ function(module, exports) {
-
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-
-/***/ },
-/* 9 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
 var elliptic = __webpack_require__(0);
-var keccak256 = __webpack_require__(7).keccak_256;
-var randomBytes = __webpack_require__(35);
+var sha3 = __webpack_require__(6);
+var randomhex = __webpack_require__(36);
 var secp256k1 = new elliptic.ec('secp256k1'); // eslint-disable-line
-var getChecksumAddress = __webpack_require__(10);
+var getChecksumAddress = __webpack_require__(8);
+var stripHexPrefix = __webpack_require__(37);
 
 /**
  * Get the address from a public key
@@ -6099,7 +5713,7 @@ function getAddress(addressInput) {
   var result = null; // eslint-disable-line
 
   if (typeof address !== 'string') {
-    throw new Error('[ethjs-account] invalid address value ' + JSON.stringify(address) + ' not a valid hex string');
+    throw new Error('[vapjs-account] invalid address value ' + JSON.stringify(address) + ' not a valid hex string');
   }
 
   // Missing the 0x prefix
@@ -6112,12 +5726,12 @@ function getAddress(addressInput) {
 
     // It is a checksummed address with a bad checksum
     if (address.match(/([A-F].*[a-f])|([a-f].*[A-F])/) && result !== address) {
-      throw new Error('[ethjs-account] invalid address checksum');
+      throw new Error('[vapjs-account] invalid address checksum');
     }
 
     // Maybe ICAP? (we only support direct mode)
   } else if (address.match(/^XE[0-9]{2}[0-9A-Za-z]{30,31}$/)) {
-    throw new Error('[ethjs-account] ICAP and IBAN addresses, not supported yet..');
+    throw new Error('[vapjs-account] ICAP and IBAN addresses, not supported yet..');
 
     /*
     // It is an ICAP address with a bad checksum
@@ -6129,7 +5743,7 @@ function getAddress(addressInput) {
     result = getChecksumAddress('0x' + result);
     */
   } else {
-    throw new Error('[ethjs-account] invalid address value ' + JSON.stringify(address) + ' not a valid hex string');
+    throw new Error('[vapjs-account] invalid address value ' + JSON.stringify(address) + ' not a valid hex string');
   }
 
   return result;
@@ -6145,71 +5759,72 @@ function getAddress(addressInput) {
 
 function privateToPublic(privateKey) {
   if (typeof privateKey !== 'string') {
-    throw new Error('[ethjs-account] private key must be type String, got ' + typeof privateKey);
+    throw new Error('[vapjs-account] private key must be type String, got ' + typeof privateKey);
   }
   if (!privateKey.match(/^(0x)?[0-9a-fA-F]{64}$/)) {
-    throw new Error('[ethjs-account] private key must be an alphanumeric hex string that is 32 bytes long.');
+    throw new Error('[vapjs-account] private key must be an alphanumeric hex string that is 32 bytes long.');
   }
 
-  return new Buffer(secp256k1.keyFromPrivate(new Buffer(privateKey.slice(2), 'hex')).getPublic(false, 'hex'), 'hex').slice(1);
+  var privateKeyBuffer = new Buffer(stripHexPrefix(privateKey), 'hex');
+  return new Buffer(secp256k1.keyFromPrivate(privateKeyBuffer).getPublic(false, 'hex'), 'hex').slice(1);
 }
 
 /**
- * Returns the Ethereum standard address of a public sepk key.
+ * Returns the Vapory standard address of a public sepk key.
  *
  * @method publicToAddress
  * @param {Object} publicKey a single public key Buffer object
- * @returns {String} address the 20 byte Ethereum address
+ * @returns {String} address the 20 byte Vapory address
  */
 
 function publicToAddress(publicKey) {
   if (!Buffer.isBuffer(publicKey)) {
-    throw new Error('[ethjs-account] public key must be a buffer object in order to get public key address');
+    throw new Error('[vapjs-account] public key must be a buffer object in order to get public key address');
   }
 
-  return getAddress(new Buffer(keccak256(publicKey), 'hex').slice(12).toString('hex'));
+  return getAddress(sha3(publicKey, true).slice(12).toString('hex'));
 }
 
 /**
- * Returns an Ethereum account address, private and public key based on the public key.
+ * Returns an Vapory account address, private and public key based on the public key.
  *
  * @method privateToAccount
  * @param {String} privateKey a single string of entropy longer than 32 chars
- * @returns {Object} output the Ethereum account address, and keys as hex strings
+ * @returns {Object} output the Vapory account address, and keys as hex strings
  */
 
 function privateToAccount(privateKey) {
   var publicKey = privateToPublic(privateKey, true);
 
   return {
-    privateKey: privateKey,
+    privateKey: '0x' + stripHexPrefix(privateKey),
     publicKey: '0x' + publicKey.toString('hex'),
     address: publicToAddress(publicKey)
   };
 }
 
 /**
- * Create a single Ethereum account address, private and public key.
+ * Create a single Vapory account address, private and public key.
  *
  * @method generate
  * @param {String} entropy a single string of entropy longer than 32 chars
- * @returns {Object} output the Ethereum account address, and keys
+ * @returns {Object} output the Vapory account address, and keys
  */
 
 function generate(entropy) {
   if (typeof entropy !== 'string') {
-    throw new Error('[ethjs-account] while generating account, invalid input type: \'' + typeof entropy + '\' should be type \'String\'.');
+    throw new Error('[vapjs-account] while generating account, invalid input type: \'' + typeof entropy + '\' should be type \'String\'.');
   }
   if (entropy.length < 32) {
-    throw new Error('[ethjs-account] while generating account, entropy value not random and long enough, should be at least 32 characters of random information, is only ' + entropy.length);
+    throw new Error('[vapjs-account] while generating account, entropy value not random and long enough, should be at least 32 characters of random information, is only ' + entropy.length);
   }
 
-  return privateToAccount('0x' + keccak256('' + randomBytes(16).toString('hex') + keccak256('' + randomBytes(32).toString('hex') + entropy) + randomBytes(32).toString('hex')));
+  return privateToAccount(sha3('' + randomhex(16) + sha3('' + randomhex(32) + entropy) + randomhex(32)));
 }
 
 // exports
 module.exports = {
-  keccak256: keccak256,
+  sha3: sha3,
   generate: generate,
   getAddress: getAddress,
   privateToAccount: privateToAccount,
@@ -6220,15 +5835,14 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3).Buffer))
 
 /***/ },
-/* 10 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
+'use strict';
 
 var elliptic = __webpack_require__(0);
-// const sha3 = require('ethjs-sha3');
-var keccak256 = __webpack_require__(7).keccak_256;
+var sha3 = __webpack_require__(6);
 var secp256k1 = new elliptic.ec('secp256k1'); // eslint-disable-line
 
 /**
@@ -6243,11 +5857,11 @@ module.exports = function getChecksumAddress(addressInput) {
   var address = addressInput; // eslint-disable-line
 
   if (typeof address !== 'string' || !address.match(/^0x[0-9A-Fa-f]{40}$/)) {
-    throw new Error('[ethjs-account] invalid address value ' + JSON.stringify(address) + ' not a valid hex string');
+    throw new Error('[vapjs-account] invalid address value ' + JSON.stringify(address) + ' not a valid hex string');
   }
 
   address = address.substring(2).toLowerCase();
-  var hashed = new Buffer(keccak256(address), 'hex');
+  var hashed = sha3(address, true);
 
   address = address.split('');
   for (var i = 0; i < 40; i += 2) {
@@ -6262,10 +5876,9 @@ module.exports = function getChecksumAddress(addressInput) {
 
   return '0x' + address.join('');
 };
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3).Buffer))
 
 /***/ },
-/* 11 */
+/* 9 */
 /***/ function(module, exports) {
 
 "use strict";
@@ -6386,7 +5999,7 @@ function fromByteArray (uint8) {
 
 
 /***/ },
-/* 12 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 var r;
@@ -6431,7 +6044,7 @@ if (typeof window === 'object') {
 } else {
   // Node.js or Web worker
   try {
-    var crypto = __webpack_require__(37);
+    var crypto = __webpack_require__(40);
 
     Rand.prototype._rand = function _rand(n) {
       return crypto.randomBytes(n);
@@ -6449,7 +6062,7 @@ if (typeof window === 'object') {
 
 
 /***/ },
-/* 13 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6831,7 +6444,7 @@ BasePoint.prototype.dblp = function dblp(k) {
 
 
 /***/ },
-/* 14 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7271,7 +6884,7 @@ Point.prototype.mixedAdd = Point.prototype.add;
 
 
 /***/ },
-/* 15 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7458,7 +7071,7 @@ Point.prototype.getX = function getX() {
 
 
 /***/ },
-/* 16 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8403,7 +8016,7 @@ JPoint.prototype.isInfinity = function isInfinity() {
 
 
 /***/ },
-/* 17 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8576,7 +8189,7 @@ defineCurve('ed25519', {
 
 var pre;
 try {
-  pre = __webpack_require__(25);
+  pre = __webpack_require__(23);
 } catch (e) {
   pre = undefined;
 }
@@ -8615,7 +8228,7 @@ defineCurve('secp256k1', {
 
 
 /***/ },
-/* 18 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8626,8 +8239,8 @@ var elliptic = __webpack_require__(0);
 var utils = elliptic.utils;
 var assert = utils.assert;
 
-var KeyPair = __webpack_require__(19);
-var Signature = __webpack_require__(20);
+var KeyPair = __webpack_require__(17);
+var Signature = __webpack_require__(18);
 
 function EC(options) {
   if (!(this instanceof EC))
@@ -8859,7 +8472,7 @@ EC.prototype.getKeyRecoveryParam = function(e, signature, Q, enc) {
 
 
 /***/ },
-/* 19 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8973,7 +8586,7 @@ KeyPair.prototype.inspect = function inspect() {
 
 
 /***/ },
-/* 20 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9115,7 +8728,7 @@ Signature.prototype.toDER = function toDER(enc) {
 
 
 /***/ },
-/* 21 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9126,8 +8739,8 @@ var elliptic = __webpack_require__(0);
 var utils = elliptic.utils;
 var assert = utils.assert;
 var parseBytes = utils.parseBytes;
-var KeyPair = __webpack_require__(22);
-var Signature = __webpack_require__(23);
+var KeyPair = __webpack_require__(20);
+var Signature = __webpack_require__(21);
 
 function EDDSA(curve) {
   assert(curve === 'ed25519', 'only tested with ed25519 so far');
@@ -9240,7 +8853,7 @@ EDDSA.prototype.isPoint = function isPoint(val) {
 
 
 /***/ },
-/* 22 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9343,7 +8956,7 @@ module.exports = KeyPair;
 
 
 /***/ },
-/* 23 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9416,7 +9029,7 @@ module.exports = Signature;
 
 
 /***/ },
-/* 24 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9537,7 +9150,7 @@ HmacDRBG.prototype.generate = function generate(len, enc, add, addEnc) {
 
 
 /***/ },
-/* 25 */
+/* 23 */
 /***/ function(module, exports) {
 
 module.exports = {
@@ -10323,7 +9936,7 @@ module.exports = {
 
 
 /***/ },
-/* 26 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10502,7 +10115,7 @@ utils.intFromLE = intFromLE;
 
 
 /***/ },
-/* 27 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 var hash = __webpack_require__(2);
@@ -10599,7 +10212,7 @@ BlockHash.prototype._pad = function pad() {
 
 
 /***/ },
-/* 28 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 var hmac = exports;
@@ -10653,7 +10266,7 @@ Hmac.prototype.digest = function digest(enc) {
 
 
 /***/ },
-/* 29 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 var hash = __webpack_require__(2);
@@ -10803,7 +10416,7 @@ var sh = [
 
 
 /***/ },
-/* 30 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 var hash = __webpack_require__(2);
@@ -11373,7 +10986,7 @@ function g1_512_lo(xh, xl) {
 
 
 /***/ },
-/* 31 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 var utils = exports;
@@ -11636,7 +11249,7 @@ exports.shr64_lo = shr64_lo;
 
 
 /***/ },
-/* 32 */
+/* 30 */
 /***/ function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -11726,7 +11339,26 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ },
-/* 33 */
+/* 31 */
+/***/ function(module, exports) {
+
+/**
+ * Returns a `Boolean` on whether or not the a `String` starts with '0x'
+ * @param {String} str the string input value
+ * @return {Boolean} a boolean if it is or is not hex prefixed
+ * @throws if the str input is not a string
+ */
+module.exports = function isHexPrefixed(str) {
+  if (typeof str !== 'string') {
+    throw new Error("[is-hex-prefixed] value must be type 'string', is currently type " + (typeof str) + ", while checking isHexPrefixed.");
+  }
+
+  return str.slice(0, 2) === '0x';
+}
+
+
+/***/ },
+/* 32 */
 /***/ function(module, exports) {
 
 var toString = {}.toString;
@@ -11737,7 +11369,7 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ },
-/* 34 */
+/* 33 */
 /***/ function(module, exports) {
 
 module.exports = {
@@ -11752,7 +11384,7 @@ module.exports = {
 				"spec": "6.3.2",
 				"type": "version"
 			},
-			"/home/nick/github/ethjs-account"
+			"/home/nick/github/vapjs-account"
 		]
 	],
 	"_from": "elliptic@6.3.2",
@@ -11789,7 +11421,7 @@ module.exports = {
 	"_shasum": "e4c81e0829cf0a65ab70e998b8232723b5c1bc48",
 	"_shrinkwrap": null,
 	"_spec": "elliptic@6.3.2",
-	"_where": "/home/nick/github/ethjs-account",
+	"_where": "/home/nick/github/vapjs-account",
 	"author": {
 		"name": "Fedor Indutny",
 		"email": "fedor@indutny.com"
@@ -11862,51 +11494,134 @@ module.exports = {
 };
 
 /***/ },
+/* 34 */
+/***/ function(module, exports) {
+
+module.exports = window.crypto;
+
+/***/ },
 /* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-"use strict";
-/* WEBPACK VAR INJECTION */(function(global, Buffer, process) {'use strict'
-
-function oldBrowser () {
-  throw new Error('secure random number generation not supported by this browser\nuse chrome, FireFox or Internet Explorer 11')
-}
-
-var crypto = global.crypto || global.msCrypto
-
-if (crypto && crypto.getRandomValues) {
-  module.exports = randomBytes
-} else {
-  module.exports = oldBrowser
-}
-
-function randomBytes (size, cb) {
-  // phantomjs needs to throw
-  if (size > 65536) throw new Error('requested too many random bytes')
-  // in case browserify  isn't using the Uint8Array version
-  var rawBytes = new global.Uint8Array(size)
-
-  // This will not work in older browsers.
-  // See https://developer.mozilla.org/en-US/docs/Web/API/window.crypto.getRandomValues
-  if (size > 0) {  // getRandomValues fails on IE if size == 0
-    crypto.getRandomValues(rawBytes)
-  }
-  // phantomjs doesn't like a buffer being passed here
-  var bytes = new Buffer(rawBytes.buffer)
-
-  if (typeof cb === 'function') {
-    return process.nextTick(function () {
-      cb(null, bytes)
-    })
-  }
-
-  return bytes
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6), __webpack_require__(3).Buffer, __webpack_require__(8)))
+module.exports = __webpack_require__(34);
 
 /***/ },
 /* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
+var randomHex = function(size, callback) {
+    var crypto = __webpack_require__(35);
+    var isCallback = (typeof callback === 'function');
+
+    
+    if (size > 65536) {
+        if(isCallback) {
+            callback(new Error('Requested too many random bytes.'));
+        } else {
+            throw new Error('Requested too many random bytes.');
+        }
+    };
+
+
+    // is node
+    if (typeof crypto !== 'undefined' && crypto.randomBytes) {
+
+        if(isCallback) {
+            crypto.randomBytes(size, function(err, result){
+                if(!err) {
+                    callback(null, '0x'+ result.toString('hex'));
+                } else {
+                    callback(error);
+                }
+            })
+        } else {
+            return '0x'+ crypto.randomBytes(size).toString('hex');
+        }
+
+    // is browser
+    } else {
+        var cryptoLib;
+
+        if (typeof crypto !== 'undefined') {
+            cryptoLib = crypto;
+        } else if(typeof msCrypto !== 'undefined') {
+            cryptoLib = msCrypto;
+        }
+
+        if (cryptoLib && cryptoLib.getRandomValues) {
+            var randomBytes = cryptoLib.getRandomValues(new Uint8Array(size));
+            var returnValue = '0x'+ Array.from(randomBytes).map(function(arr){ return arr.toString(16); }).join('');
+
+            if(isCallback) {
+                callback(null, returnValue);
+            } else {
+                return returnValue;
+            }
+
+        // not crypto object
+        } else {
+            var error = new Error('No "crypto" object available. This Browser doesn\'t support generating secure random bytes.');
+
+            if(isCallback) {
+                callback(error);
+            } else {
+               throw error;
+            }
+        }
+    }
+};
+
+
+module.exports = randomHex;
+
+
+/***/ },
+/* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+var isHexPrefixed = __webpack_require__(31);
+
+/**
+ * Removes '0x' from a given `String` is present
+ * @param {String} str the string value
+ * @return {String|Optional} a string by pass if necessary
+ */
+module.exports = function stripHexPrefix(str) {
+  if (typeof str !== 'string') {
+    return str;
+  }
+
+  return isHexPrefixed(str) ? str.slice(2) : str;
+}
+
+
+/***/ },
+/* 38 */
+/***/ function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() { return this; })();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ },
+/* 39 */
 /***/ function(module, exports) {
 
 module.exports = function(module) {
@@ -11932,20 +11647,20 @@ module.exports = function(module) {
 
 
 /***/ },
-/* 37 */
+/* 40 */
 /***/ function(module, exports) {
 
 /* (ignored) */
 
 /***/ },
-/* 38 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(9);
+module.exports = __webpack_require__(7);
 
 
 /***/ }
 /******/ ])
 });
 ;
-//# sourceMappingURL=ethjs-account.js.map
+//# sourceMappingURL=vapjs-account.js.map

@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.EthTx = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.VapTx = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -8,9 +8,9 @@ function _classCallCheck(instance, Constructor) {
   }
 }
 
-var ethUtil = require('ethereumjs-util');
-var fees = require('ethereum-common/params.json');
-var BN = ethUtil.BN;
+var vapUtil = require('vaporyjs-util');
+var fees = require('vapory-common/params.json');
+var BN = vapUtil.BN;
 
 // secp256k1n/2
 var N_DIV_2 = new BN('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0', 16);
@@ -44,7 +44,7 @@ var N_DIV_2 = new BN('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f4668
  * @param {Buffer} data.gasLimit transaction gas limit
  * @param {Buffer} data.gasPrice transaction gas price
  * @param {Buffer} data.to to the to address
- * @param {Buffer} data.value the amount of ether sent
+ * @param {Buffer} data.value the amount of vapor sent
  * @param {Buffer} data.data this will contain the data of the message or the init of a contract
  * @param {Buffer} data.v EC signature parameter
  * @param {Buffer} data.r EC signature parameter
@@ -112,7 +112,7 @@ var Transaction = function () {
      * @name serialize
      */
     // attached serialize
-    ethUtil.defineProperties(this, fields, data
+    vapUtil.defineProperties(this, fields, data
 
     /**
      * @property {Buffer} from (read only) sender address of this transaction, mathematically derived from other parameters.
@@ -125,7 +125,7 @@ var Transaction = function () {
       get: this.getSenderAddress.bind(this)
 
       // calculate chainId from signature
-    });var sigV = ethUtil.bufferToInt(this.v);
+    });var sigV = vapUtil.bufferToInt(this.v);
     var chainId = Math.floor((sigV - 35) / 2);
     if (chainId < 0) chainId = 0;
 
@@ -174,7 +174,7 @@ var Transaction = function () {
     }
 
     // create hash
-    return ethUtil.rlphash(items);
+    return vapUtil.rlphash(items);
   };
 
   /**
@@ -196,7 +196,7 @@ var Transaction = function () {
       return this._from;
     }
     var pubkey = this.getSenderPublicKey();
-    this._from = ethUtil.publicToAddress(pubkey);
+    this._from = vapUtil.publicToAddress(pubkey);
     return this._from;
   };
 
@@ -225,11 +225,11 @@ var Transaction = function () {
     }
 
     try {
-      var v = ethUtil.bufferToInt(this.v);
+      var v = vapUtil.bufferToInt(this.v);
       if (this._chainId > 0) {
         v -= this._chainId * 2 + 8;
       }
-      this._senderPubKey = ethUtil.ecrecover(msgHash, v, this.r, this.s);
+      this._senderPubKey = vapUtil.ecrecover(msgHash, v, this.r, this.s);
     } catch (e) {
       return false;
     }
@@ -244,7 +244,7 @@ var Transaction = function () {
 
   Transaction.prototype.sign = function sign(privateKey) {
     var msgHash = this.hash(false);
-    var sig = ethUtil.ecsign(msgHash, privateKey);
+    var sig = vapUtil.ecsign(msgHash, privateKey);
     if (this._chainId > 0) {
       sig.v += this._chainId * 2 + 8;
     }
@@ -316,7 +316,7 @@ var Transaction = function () {
 module.exports = Transaction;
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":68,"ethereum-common/params.json":25,"ethereumjs-util":26}],2:[function(require,module,exports){
+},{"buffer":68,"vapory-common/params.json":25,"vaporyjs-util":26}],2:[function(require,module,exports){
 // Reference https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki
 // Format: 0x30 [total-length] 0x02 [R-length] [R] 0x02 [S-length] [S]
 // NOTE: SIGHASH byte ignored AND restricted, truncate before use
@@ -8495,7 +8495,7 @@ var assert = require('assert');
 var rlp = require('rlp');
 var BN = require('bn.js');
 var createHash = require('create-hash');
-Object.assign(exports, require('ethjs-util')
+Object.assign(exports, require('vapjs-util')
 
 /**
  * the max integer that this VM can handle (a ```BN```)
@@ -8552,7 +8552,7 @@ exports.SHA3_RLP = Buffer.from(exports.SHA3_RLP_S, 'hex'
 );exports.BN = BN;
 
 /**
- * [`rlp`](https://github.com/ethereumjs/rlp)
+ * [`rlp`](https://github.com/vaporyjs/rlp)
  * @var {Function}
  */
 exports.rlp = rlp;
@@ -8750,7 +8750,7 @@ exports.isValidPrivate = function (privateKey) {
 
 /**
  * Checks if the public key satisfies the rules of the curve secp256k1
- * and the requirements of Ethereum.
+ * and the requirements of Vapory.
  * @param {Buffer} publicKey The two points of an uncompressed key, unless sanitize is enabled
  * @param {Boolean} [sanitize=false] Accept public keys in other formats
  * @return {Boolean}
@@ -8769,8 +8769,8 @@ exports.isValidPublic = function (publicKey, sanitize) {
 };
 
 /**
- * Returns the ethereum address of a given public key.
- * Accepts "Ethereum public keys" and SEC1 encoded keys.
+ * Returns the vapory address of a given public key.
+ * Accepts "Vapory public keys" and SEC1 encoded keys.
  * @param {Buffer} pubKey The two points of an uncompressed key, unless sanitize is enabled
  * @param {Boolean} [sanitize=false] Accept public keys in other formats
  * @return {Buffer}
@@ -8786,7 +8786,7 @@ exports.pubToAddress = exports.publicToAddress = function (pubKey, sanitize) {
 };
 
 /**
- * Returns the ethereum public key of a given private key
+ * Returns the vapory public key of a given private key
  * @param {Buffer} privateKey A private key must be 256 bits wide
  * @return {Buffer}
  */
@@ -8797,7 +8797,7 @@ var privateToPublic = exports.privateToPublic = function (privateKey) {
 };
 
 /**
- * Converts a public key to the Ethereum format.
+ * Converts a public key to the Vapory format.
  * @param {Buffer} publicKey
  * @return {Buffer}
  */
@@ -8826,15 +8826,15 @@ exports.ecsign = function (msgHash, privateKey) {
 };
 
 /**
- * Returns the keccak-256 hash of `message`, prefixed with the header used by the `eth_sign` RPC call.
- * The output of this function can be fed into `ecsign` to produce the same signature as the `eth_sign`
+ * Returns the keccak-256 hash of `message`, prefixed with the header used by the `vap_sign` RPC call.
+ * The output of this function can be fed into `ecsign` to produce the same signature as the `vap_sign`
  * call for a given `message`, or fed to `ecrecover` along with a signature to recover the public key
  * used to produce the signature.
  * @param message
  * @returns {Buffer} hash
  */
 exports.hashPersonalMessage = function (message) {
-  var prefix = exports.toBuffer('\x19Ethereum Signed Message:\n' + message.length.toString());
+  var prefix = exports.toBuffer('\x19Vapory Signed Message:\n' + message.length.toString());
   return exports.sha3(Buffer.concat([prefix, message]));
 };
 
@@ -8857,7 +8857,7 @@ exports.ecrecover = function (msgHash, v, r, s) {
 };
 
 /**
- * Convert signature parameters into the format of `eth_sign` RPC method
+ * Convert signature parameters into the format of `vap_sign` RPC method
  * @param {Number} v
  * @param {Buffer} r
  * @param {Buffer} s
@@ -8869,14 +8869,14 @@ exports.toRpcSig = function (v, r, s) {
     throw new Error('Invalid recovery id');
   }
 
-  // geth (and the RPC eth_sign method) uses the 65 byte format used by Bitcoin
-  // FIXME: this might change in the future - https://github.com/ethereum/go-ethereum/issues/2053
+  // gvap (and the RPC vap_sign method) uses the 65 byte format used by Bitcoin
+  // FIXME: this might change in the future - https://github.com/vaporyco/go-vapory/issues/2053
   return exports.bufferToHex(Buffer.concat([exports.setLengthLeft(r, 32), exports.setLengthLeft(s, 32), exports.toBuffer(v - 27)]));
 };
 
 /**
- * Convert signature format of the `eth_sign` RPC method to signature parameters
- * NOTE: all because of a bug in geth: https://github.com/ethereum/go-ethereum/issues/2053
+ * Convert signature format of the `vap_sign` RPC method to signature parameters
+ * NOTE: all because of a bug in gvap: https://github.com/vaporyco/go-vapory/issues/2053
  * @param {String} sig
  * @return {Object}
  */
@@ -8889,7 +8889,7 @@ exports.fromRpcSig = function (sig) {
   }
 
   var v = sig[64];
-  // support both versions of `eth_sign` responses
+  // support both versions of `vap_sign` responses
   if (v < 27) {
     v += 27;
   }
@@ -8902,7 +8902,7 @@ exports.fromRpcSig = function (sig) {
 };
 
 /**
- * Returns the ethereum address of a given private key
+ * Returns the vapory address of a given private key
  * @param {Buffer} privateKey A private key must be 256 bits wide
  * @return {Buffer}
  */
@@ -9154,7 +9154,7 @@ exports.defineProperties = function (self, fields, data) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"assert":64,"bn.js":3,"buffer":68,"create-hash":6,"ethjs-util":27,"keccak":38,"rlp":47,"secp256k1":49}],27:[function(require,module,exports){
+},{"assert":64,"bn.js":3,"buffer":68,"create-hash":6,"vapjs-util":27,"keccak":38,"rlp":47,"secp256k1":49}],27:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -9170,7 +9170,7 @@ function padToEven(value) {
   var a = value; // eslint-disable-line
 
   if (typeof a !== 'string') {
-    throw new Error('[ethjs-util] while padding to even, value must be string, is currently ' + typeof a + ', while padToEven.');
+    throw new Error('[vapjs-util] while padding to even, value must be string, is currently ' + typeof a + ', while padToEven.');
   }
 
   if (a.length % 2) {
@@ -9209,7 +9209,7 @@ function intToBuffer(i) {
  */
 function getBinarySize(str) {
   if (typeof str !== 'string') {
-    throw new Error('[ethjs-util] while getting binary size, method getBinarySize requires input \'str\' to be type String, got \'' + typeof str + '\'.');
+    throw new Error('[vapjs-util] while getting binary size, method getBinarySize requires input \'str\' to be type String, got \'' + typeof str + '\'.');
   }
 
   return Buffer.byteLength(str, 'utf8');
@@ -9226,10 +9226,10 @@ function getBinarySize(str) {
  */
 function arrayContainsArray(superset, subset, some) {
   if (Array.isArray(superset) !== true) {
-    throw new Error('[ethjs-util] method arrayContainsArray requires input \'superset\' to be an array got type \'' + typeof superset + '\'');
+    throw new Error('[vapjs-util] method arrayContainsArray requires input \'superset\' to be an array got type \'' + typeof superset + '\'');
   }
   if (Array.isArray(subset) !== true) {
-    throw new Error('[ethjs-util] method arrayContainsArray requires input \'subset\' to be an array got type \'' + typeof subset + '\'');
+    throw new Error('[vapjs-util] method arrayContainsArray requires input \'subset\' to be an array got type \'' + typeof subset + '\'');
   }
 
   return subset[Boolean(some) && 'some' || 'every'](function (value) {
@@ -9319,10 +9319,10 @@ function fromAscii(stringValue) {
  */
 function getKeys(params, key, allowEmpty) {
   if (!Array.isArray(params)) {
-    throw new Error('[ethjs-util] method getKeys expecting type Array as \'params\' input, got \'' + typeof params + '\'');
+    throw new Error('[vapjs-util] method getKeys expecting type Array as \'params\' input, got \'' + typeof params + '\'');
   }
   if (typeof key !== 'string') {
-    throw new Error('[ethjs-util] method getKeys expecting type String for input \'key\' got \'' + typeof key + '\'.');
+    throw new Error('[vapjs-util] method getKeys expecting type String for input \'key\' got \'' + typeof key + '\'.');
   }
 
   var result = []; // eslint-disable-line
@@ -11580,7 +11580,7 @@ module.exports = RIPEMD160
 (function (Buffer){
 const assert = require('assert')
 /**
- * RLP Encoding based on: https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-RLP
+ * RLP Encoding based on: https://github.com/vapory/wiki/wiki/%5BEnglish%5D-RLP
  * This function takes in a data, convert it to buffer if not, and a length for recursion
  *
  * @param {Buffer,String,Integer,Array} data - will be converted to buffer
@@ -11624,7 +11624,7 @@ function encodeLength (len, offset) {
 }
 
 /**
- * RLP Decoding based on: {@link https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-RLP|RLP}
+ * RLP Decoding based on: {@link https://github.com/vapory/wiki/wiki/%5BEnglish%5D-RLP|RLP}
  * @param {Buffer,String,Integer,Array} data - will be converted to buffer
  * @returns {Array} - returns decode Array of Buffers containg the original message
  **/
